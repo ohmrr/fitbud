@@ -204,7 +204,8 @@ export default function Screen() {
               <View className="flex-row items-center gap-x-2">
                 <View className="h-3 w-3 animate-pulse rounded-full bg-white" />
                 <Text className="font-bold text-white">
-                  REC {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
+                  REC {Math.floor(recordingTime / 60)}:
+                  {(recordingTime % 60).toString().padStart(2, '0')}
                 </Text>
               </View>
             </View>
@@ -327,8 +328,9 @@ export default function Screen() {
                 className={`items-center justify-center ${!cameraReady && 'opacity-50'}`}>
                 {/* Outer Ring */}
                 <View
-                  className={`h-20 w-20 items-center justify-center rounded-full border-4 ${isRecording ? 'border-red-500' : 'border-white'
-                    }`}
+                  className={`h-20 w-20 items-center justify-center rounded-full border-4 ${
+                    isRecording ? 'border-red-500' : 'border-white'
+                  }`}
                   style={{
                     shadowColor: isRecording ? '#ef4444' : '#fff',
                     shadowOffset: { width: 0, height: 0 },
@@ -337,21 +339,20 @@ export default function Screen() {
                   }}>
                   {/* Inner Button */}
                   <View
-                    className={`items-center justify-center rounded-full ${isRecording ? 'h-6 w-6 bg-red-500' : 'h-14 w-14 bg-white'
-                      }`}>
+                    className={`items-center justify-center rounded-full ${
+                      isRecording ? 'h-6 w-6 bg-red-500' : 'h-14 w-14 bg-white'
+                    }`}>
                     {!isRecording && <Ionicons name="videocam" size={24} color="#000" />}
                   </View>
                 </View>
               </TouchableOpacity>
 
               {/* Button Label */}
-              <Text className="mt-3 font-medium text-white">
-                {isRecording ? 'Stop' : 'Record'}
-              </Text>
+              <Text className="mt-3 font-medium text-white">{isRecording ? 'Stop' : 'Record'}</Text>
             </View>
           </View>
         )}
       </View>
     </>
-  )
+  );
 }

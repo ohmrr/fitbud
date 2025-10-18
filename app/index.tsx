@@ -39,7 +39,7 @@ export default function Screen() {
           </Text>
         </View>
         <View className="flex-row items-center justify-center gap-2">
-          <Link href="/camera" asChild>
+          <Link href="/upload" asChild>
             <Button>
               <Text>Get Started</Text>
             </Button>
