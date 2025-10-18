@@ -45,9 +45,9 @@ export default function Screen() {
               <Text>Upload</Text>
             </Button>
           </Link>
-          <Link href="https://github.com/founded-labs/react-native-reusables" asChild>
+          <Link href="/info" asChild>
             <Button>
-              <Text>Explanation</Text>
+              <Text>Info</Text>
             </Button>
           </Link>
         </View>
