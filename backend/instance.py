@@ -9,15 +9,26 @@ import uuid
 
 ALL_INSTANCES = {}
 
+
+class Instances:
+    def __init__(self):
+        self.instances = {}
+
+    def get_instance(self, id):
+        return self.instances.get(id)
+    
+    def add_instance(self, id, instance):
+        self.instances[id] = instance
+
 class Instance:
-    def __init__(self, bytes):
+    def __init__(self, bytes, instances: Instances):
         self.bytes = bytes
         self.status = 'Not Started'
         self.done = False
         self.progress = 0
         self.result = None
-        self.id = uuid.uuid4()
-        ALL_INSTANCES[self.id] = self
+        self.id = str(uuid.uuid4())
+        instances.add_instance(self.id, self)
     
     def start(self):
         self.thread = Thread(target=self.run)
@@ -47,16 +58,13 @@ class Instance:
         data = landmarks(self.video)
 
         self.status = 'Generating Feedback'
-        feedback = feedback(self.video)
+        feedback_data = feedback(data)
 
         self.status = 'Finishing'
         self.result = {
-            'feedback': feedback
+            'feedback': feedback_data
         }
         self.file.close()
 
         self.status = 'Finished'
         self.done = True
-
-def get_instance(id) -> Instance:
-    return ALL_INSTANCES[id]
