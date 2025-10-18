@@ -6,6 +6,9 @@ from mediapipe.python.solutions.pose import PoseLandmark
 import os
 from openai import OpenAI
 
+with open('prompt.txt') as file:
+    PROMPT = file.read()
+
 load_dotenv()
 client = OpenAI(
   base_url="https://openrouter.ai/api/v1",
@@ -16,7 +19,7 @@ def ask_model(message):
     completion = client.chat.completions.create(
         extra_headers={},
         extra_body={},
-        model="tngtech/deepseek-r1t2-chimera:free",
+        model="meta-llama/llama-4-maverick:free",
         messages=[
             {
             "role": "user",
@@ -24,15 +27,15 @@ def ask_model(message):
             }
         ]
     )
-    print(completion.choices[0].message.content)
+    return completion.choices[0].message.content
 
 def feedback(data):
     '''takes tracking data and generates feedback'''
     angle_data = track_angle(data)
     trimmed = [round(angle) for i, angle in enumerate(angle_data) if i % 10 == 0]
     data_string = ' '.join(str(trimmed))
-    prompt = 'below are values for the angle of the knee over time as someone performs a squat. provide one line feedback on if the form appears healthy. measurements may not be exact, do not be too strict. a squat should start straight up, slowly go down to roughly 75-90 degrees, then slowly go back up. '
-    result = ask_model(prompt + data_string)
+    # prompt = 'below are values for the angle of the knee over time as someone performs a squat. provide one line feedback on if the form appears healthy. measurements may not be exact, do not be too strict. a squat should start straight up, slowly go down to roughly 75-90 degrees, then slowly go back up. '
+    result = ask_model(PROMPT + data_string)
     return result
 
 def track_angle(data):
