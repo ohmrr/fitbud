@@ -1,8 +1,11 @@
 import requests
 import time
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 # HOST = 'http://127.0.0.1:5000'
-HOST = 'https://fitbud-m7tj.onrender.com'
+HOST = os.getenv('HOST')
 
 def test():
     with open('sample/squat.mp4', 'rb') as file:
