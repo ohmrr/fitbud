@@ -1,7 +1,8 @@
 import requests
 import time
 
-HOST = 'http://127.0.0.1:5000'
+# HOST = 'http://127.0.0.1:5000'
+HOST = 'https://fitbud-m7tj.onrender.com'
 
 def test():
     with open('sample/squat.mp4', 'rb') as file:
@@ -12,12 +13,13 @@ def test():
         print(id)
 
     while True:
-        time.sleep(0.5)
+        time.sleep(1)
         response = requests.get(f'{HOST}/status/{id}')
+        if not response: continue
+        if response.status_code != 200: continue
         result = response.json()
         if 'error' in result:
             print(result['error'])
-            break
         if result['done']:
             print(result['result']['feedback'])
             break
