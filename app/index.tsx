@@ -1,8 +1,7 @@
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { Button } from '@/components/ui/button';
-import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { Link, Stack } from 'expo-router';
-import { MoonStarIcon, StarIcon, SunIcon } from 'lucide-react-native';
 import { useColorScheme } from 'nativewind';
 import * as React from 'react';
 import { Image, type ImageStyle, View } from 'react-native';
@@ -13,9 +12,9 @@ const LOGO = {
 };
 
 const SCREEN_OPTIONS = {
-  title: 'Fitbud',
+  title: 'FitBud',
   headerTransparent: true,
-  headerRight: () => <ThemeToggle />,
+  headerRight: () => <ThemeSwitcher />,
 };
 
 const IMAGE_STYLE: ImageStyle = {
@@ -39,38 +38,19 @@ export default function Screen() {
             2. Explanation of how it works
           </Text>
         </View>
-        <View className="flex-row gap-2">
+        <View className="flex-row items-center justify-center gap-2">
           <Link href="/upload" asChild>
             <Button>
-              <Text>Upload</Text>
+              <Text>Get Started</Text>
             </Button>
           </Link>
           <Link href="/info" asChild>
-            <Button>
-              <Text>Info</Text>
+            <Button variant="secondary">
+              <Text>More Info</Text>
             </Button>
           </Link>
         </View>
       </View>
     </>
-  );
-}
-
-const THEME_ICONS = {
-  light: SunIcon,
-  dark: MoonStarIcon,
-};
-
-function ThemeToggle() {
-  const { colorScheme, toggleColorScheme } = useColorScheme();
-
-  return (
-    <Button
-      onPressIn={toggleColorScheme}
-      size="icon"
-      variant="ghost"
-      className="ios:size-9 rounded-full web:mx-4">
-      <Icon as={THEME_ICONS[colorScheme ?? 'light']} className="size-5" />
-    </Button>
   );
 }
