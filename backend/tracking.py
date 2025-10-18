@@ -2,9 +2,8 @@
 
 from video import Video
 import mediapipe as mp
-
-mp_pose = mp.solutions.pose
-mp_drawing = mp.solutions.drawing_utils
+from mediapipe.python.solutions import pose as mp_pose
+from mediapipe.python.solutions import drawing_utils as mp_drawing
 
 def landmarks(video: Video):
     '''return list of landmark locations for each frame of the video'''
@@ -18,5 +17,6 @@ def landmarks(video: Video):
     ) as pose:
         for frame in video.frames():
             results = pose.process(frame)
-            result.append(results.pose_landmarks)
+            if results.pose_world_landmarks:
+                result.append(results.pose_world_landmarks.landmark)
     return result

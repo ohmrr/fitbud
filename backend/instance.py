@@ -13,6 +13,7 @@ class Instance:
     def __init__(self, bytes):
         self.bytes = bytes
         self.status = 'Not Started'
+        self.done = False
         self.progress = 0
         self.result = None
         self.id = uuid.uuid4()
@@ -28,7 +29,8 @@ class Instance:
     def get_status(self):
         return {
             'status': self.status,
-            'progress': self.progress
+            'progress': self.progress,
+            'done': self.done
         }
 
     def get_result(self):
@@ -54,6 +56,7 @@ class Instance:
         self.file.close()
 
         self.status = 'Finished'
+        self.done = True
 
 def get_instance(id) -> Instance:
     return ALL_INSTANCES[id]
