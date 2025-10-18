@@ -19,4 +19,6 @@ def landmarks(video: Video):
             results = pose.process(frame)
             if results.pose_world_landmarks:
                 result.append(results.pose_world_landmarks.landmark)
+            else:
+                result.append(None)
     return result

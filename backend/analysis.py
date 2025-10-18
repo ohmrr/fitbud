@@ -43,6 +43,7 @@ def track_angle(data):
     result = []
     l_vis = r_vis = 0
     for frame in data:
+        if frame is None: continue
         lh = frame[PoseLandmark.LEFT_HIP]
         lk = frame[PoseLandmark.LEFT_KNEE]
         la = frame[PoseLandmark.LEFT_ANKLE]
@@ -63,6 +64,7 @@ def track_angle(data):
 
 
     for frame in data:
+        if frame is None: continue
         h = frame[HIP]
         k = frame[KNEE]
         a = frame[ANKLE]
