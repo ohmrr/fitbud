@@ -7,16 +7,17 @@ import * as ImagePicker from 'expo-image-picker';
 import { Stack } from 'expo-router';
 import * as React from 'react';
 import { useState } from 'react';
-import { View, ScrollView, Alert } from 'react-native';
+import { View, ScrollView, Alert, Platform } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { Activity, CheckCircle2, Upload, AlertCircle } from 'lucide-react-native';
 
-const BACKEND_HOST = 'https://fitbud-m7tj.onrender.com';
+// 🧠 Make sure this matches your Flask server
+const BACKEND_HOST = 'http://10.117.6.179:8080';
 
 const SCREEN_OPTIONS = {
   title: 'Upload',
   headerTransparent: true,
-  headerRight: () => <ThemeSwitcher />
+  headerRight: () => <ThemeSwitcher />,
 };
 
 type AnalysisStatus = 'idle' | 'uploading' | 'processing' | 'complete' | 'error';
@@ -38,24 +39,27 @@ export default function UploadScreen() {
     player.loop = true;
   });
 
+  // 🎥 Pick a video from gallery
   const pickVideo = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['videos'],
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: false,
       quality: 1,
-      videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality, // Native H.264 conversion!
+      videoExportPreset: ImagePicker.VideoExportPreset.MediumQuality,
     });
 
     if (!result.canceled) {
-      setVideoUri(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setVideoUri(uri);
       setStatus('idle');
       setResult(null);
       setProgress(0);
-      // Update player source (async version to avoid warning)
-      player.replaceAsync(result.assets[0].uri);
+      player.replaceAsync(uri);
     }
   };
 
+  // 🚀 Upload and trigger analysis
+  // 🚀 Upload and trigger analysis
   const uploadAndAnalyze = async () => {
     if (!videoUri) return;
 
@@ -66,25 +70,21 @@ export default function UploadScreen() {
 
       const filename = videoUri.split('/').pop() || 'video.mp4';
 
-      // Create FormData with the video URI
-      const formData = new FormData();
-      formData.append('video', {
-        uri: videoUri,
-        name: filename,
-        type: 'video/mp4',
-      } as any);
+      // 🔥 Read raw bytes from the local file
+      const fileData = await fetch(videoUri);
+      const blob = await fileData.blob();
 
-      // Upload
+      // 🚀 Send raw bytes directly, NOT multipart/form-data
       const uploadResult = await fetch(`${BACKEND_HOST}/process`, {
         method: 'POST',
-        body: formData,
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'video/mp4', // or 'application/octet-stream'
         },
+        body: blob,
       });
 
       if (!uploadResult.ok) {
-        throw new Error('Upload failed');
+        throw new Error(`Upload failed: ${uploadResult.status}`);
       }
 
       const responseData = await uploadResult.json();
@@ -94,7 +94,6 @@ export default function UploadScreen() {
       setProgress(30);
       setStatusMessage('Analyzing your workout...');
 
-      // Poll for status
       pollStatus(id);
     } catch (error) {
       console.error('Upload error:', error);
@@ -104,6 +103,7 @@ export default function UploadScreen() {
     }
   };
 
+  // 🔄 Poll Flask backend for analysis completion
   const pollStatus = async (id: string) => {
     try {
       const response = await fetch(`${BACKEND_HOST}/status/${id}`);
@@ -121,12 +121,11 @@ export default function UploadScreen() {
         setResult(data.result);
       } else {
         setStatusMessage(data.status || 'Processing...');
-        // Update progress incrementally (30-90%)
         setProgress((prev) => Math.min(prev + 5, 90));
-        // Continue polling
         setTimeout(() => pollStatus(id), 2000);
       }
     } catch (error) {
+      console.error('Polling error:', error);
       setStatus('error');
       setStatusMessage('Analysis failed. Please try again.');
       Alert.alert('Error', 'Analysis failed. Please try again.');
@@ -160,7 +159,7 @@ export default function UploadScreen() {
     <>
       <Stack.Screen options={SCREEN_OPTIONS} />
       <ScrollView className="flex-1">
-        <View className="flex-1 items-center justify-center gap-6 p-6 pt-24 mt-10">
+        <View className="mt-10 flex-1 items-center justify-center gap-6 p-6 pt-24">
           {/* Video Preview */}
           {videoUri && status === 'idle' && (
             <Card className="w-full max-w-md">

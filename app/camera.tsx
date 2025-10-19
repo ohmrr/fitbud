@@ -13,6 +13,7 @@ const SCREEN_OPTIONS = {
 };
 
 const MAX_DURATION = 15; // Maximum video duration in seconds
+const BACKEND_HOST = 'https://your-backend-url.com'; // Replace with your actual backend URL
 const POLL_INTERVAL = 1000; // Poll every 1 second
 
 export default function Screen() {
