@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/ui/text';
-import * as FileSystem from 'expo-file-system';
+import { Progress } from '@/components/ui/progress';
 import { File } from 'expo-file-system';
 
 const SCREEN_OPTIONS = {
@@ -13,6 +13,7 @@ const SCREEN_OPTIONS = {
 };
 
 const MAX_DURATION = 15; // Maximum video duration in seconds
+const POLL_INTERVAL = 1000; // Poll every 1 second
 
 export default function Screen() {
   const cameraRef = useRef<any>(null);
@@ -24,13 +25,19 @@ export default function Screen() {
   const [showResults, setShowResults] = useState(false);
   const [facing, setFacing] = useState<CameraType>('back');
   const [cameraReady, setCameraReady] = useState(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [processingStatus, setProcessingStatus] = useState('');
+  const [progress, setProgress] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
       }
     };
   }, []);
@@ -89,40 +96,100 @@ export default function Screen() {
     }
   };
 
+  const pollStatus = async (processId: string) => {
+    try {
+      const response = await fetch(`${BACKEND_HOST}/status/${processId}`);
+      const data = await response.json();
+
+      if (data.done) {
+        // Processing complete
+        if (pollTimerRef.current) {
+          clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+        }
+
+        setProgress(100);
+        setProcessingStatus('Analysis complete!');
+
+        // Store feedback and show results
+        setFeedback(data.result);
+        setShowResults(true);
+        setIsProcessing(false);
+      } else {
+        // Still processing - update status message
+        setProcessingStatus(data.status || 'Processing...');
+
+        // Update progress based on status message (rough estimation)
+        if (data.status?.includes('extract')) {
+          setProgress(20);
+        } else if (data.status?.includes('pose')) {
+          setProgress(40);
+        } else if (data.status?.includes('analyz')) {
+          setProgress(70);
+        } else {
+          setProgress((prev) => Math.min(prev + 5, 90));
+        }
+      }
+    } catch (err) {
+      console.error('Polling error:', err);
+      // Continue polling even on error
+    }
+  };
+
   const processVideo = async (videoUri: string) => {
     setIsProcessing(true);
+    setProgress(0);
+    setProcessingStatus('Uploading video...');
 
     try {
-      // Read video file as base64
-      const videoBase64 = await FileSystem.readAsStringAsync(videoUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      // Read video file using the Expo File API
+      const file = new File(videoUri);
+      const base64String = await file.base64();
 
-      // Send to Flask backend
-      const response = await fetch('https://your-backend-url.com/api/analyze-video', {
+      setProgress(10);
+      setProcessingStatus('Sending to server...');
+
+      // Send to Flask backend to start processing
+      const response = await fetch(`${BACKEND_HOST}/process`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          video: videoBase64,
-          timestamp: Date.now(),
+          video: base64String,
         }),
       });
 
-      const result = await response.json();
+      if (!response.ok) {
+        throw new Error('Failed to start processing');
+      }
 
-      // Store feedback and show results
-      setFeedback(result);
-      setShowResults(true);
+      const { id: processId } = await response.json();
+
+      setProgress(15);
+      setProcessingStatus('Processing video...');
+
+      // Start polling for status
+      pollTimerRef.current = setInterval(() => {
+        pollStatus(processId);
+      }, POLL_INTERVAL);
+
+      // Initial poll
+      pollStatus(processId);
     } catch (err) {
       console.error('Processing error:', err);
+
+      // Clear polling timer if exists
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+
       setFeedback({
         error: true,
         message: 'Failed to analyze video. Please try again.',
       });
       setShowResults(true);
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -135,6 +202,8 @@ export default function Screen() {
     setShowResults(false);
     setFeedback(null);
     setRecordingTime(0);
+    setProgress(0);
+    setProcessingStatus('');
   };
 
   // Permission UI
@@ -212,12 +281,18 @@ export default function Screen() {
           </View>
         )}
 
-        {/* Processing Overlay */}
+        {/* Processing Overlay with Progress Bar */}
         {isProcessing && (
-          <View className="absolute inset-0 items-center justify-center bg-black/80">
+          <View className="absolute inset-0 items-center justify-center bg-black/90 px-8">
             <ActivityIndicator size="large" color="#fff" />
-            <Text className="mt-4 text-lg font-semibold text-white">Analyzing your form...</Text>
-            <Text className="mt-2 text-sm text-white/70">This may take a moment</Text>
+            <Text className="mt-6 text-xl font-semibold text-white">Analyzing your form...</Text>
+            <Text className="mt-2 text-center text-sm text-white/70">{processingStatus}</Text>
+
+            {/* Progress Bar */}
+            <View className="mt-6 w-full max-w-sm">
+              <Progress value={progress} className="h-2" />
+              <Text className="mt-2 text-center text-sm text-white/50">{progress}%</Text>
+            </View>
           </View>
         )}
 
@@ -242,12 +317,12 @@ export default function Screen() {
               ) : (
                 <>
                   {/* Overall Feedback */}
-                  {feedback.overall && (
+                  {feedback.feedback && (
                     <View className="mb-6 rounded-2xl bg-white/10 p-6">
                       <Text className="mb-2 text-sm font-semibold uppercase tracking-wide text-white/70">
                         Overall Assessment
                       </Text>
-                      <Text className="text-lg text-white">{feedback.overall}</Text>
+                      <Text className="text-lg text-white">{feedback.feedback}</Text>
                     </View>
                   )}
 

@@ -14,7 +14,6 @@ const LOGO = {
 const SCREEN_OPTIONS = {
   title: 'FitBud',
   headerTransparent: true,
-  headerRight: () => <ThemeSwitcher />,
 };
 
 const IMAGE_STYLE: ImageStyle = {

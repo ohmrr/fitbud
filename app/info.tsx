@@ -10,7 +10,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const SCREEN_OPTIONS = {
   title: 'Information',
   headerTransparent: true,
-  headerRight: () => <ThemeSwitcher />,
 };
 
 const infoSteps = [
