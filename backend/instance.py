@@ -49,7 +49,7 @@ class Instance:
 
     def run(self):
         self.status = 'Setting Up'
-        self.file = tempfile.NamedTemporaryFile(suffix='.mov') # create temp file for video
+        self.file = tempfile.NamedTemporaryFile(suffix='.mp4') # create temp file for video
         self.file.write(self.bytes)
         self.file.flush()
         self.video = Video(self.file.name)
