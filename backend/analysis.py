@@ -8,6 +8,12 @@ from openai import OpenAI
 
 with open('prompt.txt') as file:
     PROMPT = file.read()
+with open('prompts/prompt_healthy.txt') as file:
+    PROMPT_HEALTHY = file.read()
+with open('prompts/prompt_low.txt') as file:
+    PROMPT_LOW = file.read()
+with open('prompts/prompt_high.txt') as file:
+    PROMPT_HIGH = file.read()
 
 load_dotenv()
 client = OpenAI(
@@ -33,10 +39,14 @@ def feedback(data):
     '''takes tracking data and generates feedback'''
     angle_data = track_angle(data)
     trimmed = [round(angle) for i, angle in enumerate(angle_data) if i % 5 == 0]
+    minimum = min(trimmed)
     data_string = ' '.join(str(x) for x in trimmed)
     # print(data_string)
     # prompt = 'below are values for the angle of the knee over time as someone performs a squat. provide one line feedback on if the form appears healthy. measurements may not be exact, do not be too strict. a squat should start straight up, slowly go down to roughly 75-90 degrees, then slowly go back up. '
-    result = ask_model(PROMPT + data_string)
+    if minimum < 60: prompt = PROMPT_LOW
+    elif minimum > 95: prompt = PROMPT_HIGH
+    else: prompt = PROMPT_HEALTHY
+    result = ask_model(prompt + '\n' + data_string)
     return result
 
 def track_angle(data):

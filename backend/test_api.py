@@ -4,11 +4,11 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-# HOST = 'http://127.0.0.1:5000'
-HOST = os.getenv('HOST')
+HOST = 'http://127.0.0.1:5000'
+# HOST = os.getenv('HOST')
 
 def test():
-    with open('sample/squat.mp4', 'rb') as file:
+    with open('sample/iphone.mov', 'rb') as file:
         data = file.read()
         response = requests.post(f'{HOST}/process', data)
         result = response.json()

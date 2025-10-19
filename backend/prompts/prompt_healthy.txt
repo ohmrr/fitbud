@@ -1,0 +1,5 @@
+Below are values for the angle of the knee over time as someone performs a squat.
+Provide one brief, straightforward line of human-friendly feedback on if the form appears healthy and why.
+A squat should start at 180, slowly go down to roughly 75-90 degrees at the bottom, then slowly go back up.
+In this data, the angle seems to be in the healthy range, but check the data to see what you think.
+Only return the line of feedback.
