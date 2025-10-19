@@ -22,32 +22,41 @@ client = OpenAI(
 )
 
 def ask_model(message):
-    completion = client.chat.completions.create(
-        extra_headers={},
-        extra_body={},
-        model="meta-llama/llama-4-maverick:free",
-        messages=[
-            {
-            "role": "user",
-            "content": message
-            }
-        ]
-    )
-    return completion.choices[0].message.content
+    try:
+        completion = client.chat.completions.create(
+            extra_headers={},
+            extra_body={},
+            model="openai/gpt-oss-20b:free",
+            messages=[
+                {
+                "role": "user",
+                "content": message
+                }
+            ]
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f'An error occurred with the llm model. {e}'
 
 def feedback(data):
     '''takes tracking data and generates feedback'''
-    angle_data = track_angle(data)
-    trimmed = [round(angle) for i, angle in enumerate(angle_data) if i % 5 == 0]
-    minimum = min(trimmed)
-    data_string = ' '.join(str(x) for x in trimmed)
-    # print(data_string)
-    # prompt = 'below are values for the angle of the knee over time as someone performs a squat. provide one line feedback on if the form appears healthy. measurements may not be exact, do not be too strict. a squat should start straight up, slowly go down to roughly 75-90 degrees, then slowly go back up. '
-    if minimum < 60: prompt = PROMPT_LOW
-    elif minimum > 95: prompt = PROMPT_HIGH
-    else: prompt = PROMPT_HEALTHY
-    result = ask_model(prompt + '\n' + data_string)
-    return result
+    try:
+        if len(data) == 0: return 'An error occurred (no tracking data)'
+        angle_data = track_angle(data)
+        if len(angle_data) == 0: return 'An error occurred (no angle data)'
+        trimmed = [round(angle) for i, angle in enumerate(angle_data) if i % 5 == 0]
+        if len(trimmed) == 0: return 'An error occurred (no angle data (2))'
+        minimum = min(trimmed)
+        data_string = ' '.join(str(x) for x in trimmed)
+        # print(data_string)
+        # prompt = 'below are values for the angle of the knee over time as someone performs a squat. provide one line feedback on if the form appears healthy. measurements may not be exact, do not be too strict. a squat should start straight up, slowly go down to roughly 75-90 degrees, then slowly go back up. '
+        if minimum < 60: prompt = PROMPT_LOW
+        elif minimum > 95: prompt = PROMPT_HIGH
+        else: prompt = PROMPT_HEALTHY
+        result = ask_model(prompt + '\n' + data_string)
+        return result
+    except Exception as e:
+        return f'An error ocurred in feedback generation. {e}'
 
 def track_angle(data):
     result = []

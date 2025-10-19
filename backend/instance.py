@@ -48,23 +48,27 @@ class Instance:
         return self.result
 
     def run(self):
-        self.status = 'Setting Up'
-        self.file = tempfile.NamedTemporaryFile(suffix='.mp4') # create temp file for video
-        self.file.write(self.bytes)
-        self.file.flush()
-        self.video = Video(self.file.name)
+        try:
+            self.status = 'Setting Up'
+            self.file = tempfile.NamedTemporaryFile(suffix='.mp4') # create temp file for video
+            self.file.write(self.bytes)
+            self.file.flush()
+            self.video = Video(self.file.name)
 
-        self.status = 'Analyzing Video'
-        data = landmarks(self.video)
+            self.status = 'Analyzing Video'
+            data = landmarks(self.video)
 
-        self.status = 'Generating Feedback'
-        feedback_data = feedback(data)
+            self.status = 'Generating Feedback'
+            feedback_data = feedback(data)
 
-        self.status = 'Finishing'
-        self.result = {
-            'feedback': feedback_data
-        }
-        self.file.close()
-
+            self.status = 'Finishing'
+            self.result = {
+                'feedback': feedback_data
+            }
+            self.file.close()
+        except Exception as e:
+            self.result = {
+                'feedback': f'Error occurred. {e}'
+            }
         self.status = 'Finished'
         self.done = True
